@@ -13,9 +13,11 @@ const mongoClient = new MongoClient(process.env.MONGO_DSN, options)
 const db = mongoClient.db(process.env.MONGO_DB || 'nextjs')
 
 interface Client {
-  productsCollection: Collection
+  productsCollection: Collection,
+  cartsCollection: Collection,
 }
 
 export default {
   productsCollection: db.collection('products'),
+  cartsCollection: db.collection('carts'),
 } as Client

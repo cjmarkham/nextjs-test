@@ -1,18 +1,20 @@
 import { faker } from '@faker-js/faker'
 
 import client from '@/lib/mongodb'
-import { Product } from '@/api/models'
 import { ObjectId } from 'mongodb'
 
 ;(async () => {
-  const products: Array<Product> = []
-  for (let i = 0; i < 100; i += 1) {
+  const products = []
+  for (let i = 0; i < 10; i += 1) {
+    const name = faker.commerce.productName()
+
     products.push({
-      id: new ObjectId().toString(),
-      name: faker.commerce.product(),
+      _id: new ObjectId(),
+      name,
       description: faker.commerce.productDescription(),
       price: 100,
       image: 'https://placehold.co/200x200',
+      slug: name.replaceAll(' ', '-').toLowerCase()
     })
   }
 

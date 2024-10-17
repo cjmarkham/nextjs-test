@@ -3,10 +3,17 @@ import { Star, ShoppingCart } from 'lucide-react'
 import Image from 'next/image'
 import { useProduct } from '@/hooks/products'
 import { useRouter } from 'next/router'
+import { useCart } from '@/context/cart'
 
 export default function PDP() {
   const router = useRouter()
-  const { product } = useProduct(router.query.id as string)
+  const { product } = useProduct(router.query?.slug as string)
+
+  const { addToCart } = useCart()
+
+  const handleAddToCart = () => {
+    addToCart(product)
+  }
 
   return (
     <div className="flex flex-col md:flex-row -mx-4">
@@ -15,15 +22,15 @@ export default function PDP() {
           <Image
             src="https://placehold.co/460x460"
             alt={product.name}
-            width={200}
-            height={200}
-            className="w-full h-48 object-cover"
+            width={460}
+            height={460}
+            className="w-full h-[460px] object-cover"
             priority={true}
           />
         </div>
         <div className="flex -mx-2 mb-4">
           <div className="w-1/2 px-2">
-            <button className="w-full bg-blue-500 text-white py-2 px-4 rounded-full font-bold hover:bg-primary/80 transition-colors">
+            <button onClick={handleAddToCart} className="w-full bg-blue-500 text-white py-2 px-4 rounded-full font-bold hover:bg-primary/80 transition-colors">
               <ShoppingCart className="w-4 h-4 inline-block mr-2" />
               Add to Cart
             </button>

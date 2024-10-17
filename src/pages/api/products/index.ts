@@ -19,6 +19,7 @@ export default async function ListProducts (req: NextApiRequest, res: NextApiRes
       price: document.price,
       description: document.description,
       image: document.image,
+      slug: document.slug,
     })
   }
 

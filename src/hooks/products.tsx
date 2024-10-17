@@ -34,7 +34,7 @@ export const useProducts = (limit: number) => {
 }
 
 export const useProduct = (id: string) => {
-  const [product, setProduct] = useState<Product>({ description: '', id: '', image: '', name: '', price: 0 })
+  const [product, setProduct] = useState<Product>({ slug: '', description: '', id: '', image: '', name: '', price: 0 })
 
   useEffect(() => {
     const controller = new AbortController()
@@ -43,7 +43,7 @@ export const useProduct = (id: string) => {
       const response = await fetch(`/api/products/${id}`, {
         signal: controller.signal,
       }).catch((err) => {
-        if (err.name !== 'AbortController') {
+        if (err.name !== 'AbortError') {
           console.error(err)
         }
       })
