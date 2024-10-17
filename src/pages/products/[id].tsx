@@ -1,31 +1,13 @@
 import { Star, ShoppingCart } from 'lucide-react'
 
 import Image from 'next/image'
-import client from '@/lib/mongodb'
-import { ObjectId } from 'mongodb'
+import { useProduct } from '@/hooks/products'
+import { useRouter } from 'next/router'
 
-export async function getServerSideProps(context) {
-  const { id } = context.params
+export default function PDP() {
+  const router = useRouter()
+  const { product } = useProduct(router.query.id as string)
 
-  const document = await client.productsCollection.findOne({
-    _id: new ObjectId(id),
-  })
-  if (!document) {
-    return { props: { product: null } }
-  }
-
-  const product = {
-    id: document._id.toString(),
-    name: document.name,
-    price: document.price,
-    description: document.description,
-    image: document.image,
-  }
-
-  return { props: { product } }
-}
-
-export default function PDP({ product }) {
   return (
     <div className="flex flex-col md:flex-row -mx-4">
       <div className="md:flex-1 px-4">
@@ -41,7 +23,7 @@ export default function PDP({ product }) {
         </div>
         <div className="flex -mx-2 mb-4">
           <div className="w-1/2 px-2">
-            <button className="w-full bg-primary text-white py-2 px-4 rounded-full font-bold hover:bg-primary/80 transition-colors">
+            <button className="w-full bg-blue-500 text-white py-2 px-4 rounded-full font-bold hover:bg-primary/80 transition-colors">
               <ShoppingCart className="w-4 h-4 inline-block mr-2" />
               Add to Cart
             </button>
