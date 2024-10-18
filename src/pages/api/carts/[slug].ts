@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { ObjectId } from 'mongodb'
 
 import client from '@/lib/mongodb'
+import { CartItem } from '@/lib/models'
 
 interface CartItemRequest {
   slug: string
@@ -19,7 +20,42 @@ export default async function Cart(req: NextApiRequest, res: NextApiResponse) {
     return AddToCart(req, res)
   }
 
+  if (req.method === 'PUT') {
+    return UpdateCart(req, res)
+  }
+
   return GetCart(req, res)
+}
+
+const UpdateCart = async (req: NextApiRequest, res: NextApiResponse) => {
+  const slug = req.query?.slug
+  const body: RequestBody = req.body
+  const requestedItems = body.data?.items
+
+  if (!requestedItems) {
+    res.status(400).json({ title: 'Bad Request' })
+    return
+  }
+
+  const errors = []
+
+  requestedItems.forEach((item) => {
+    if (item.quantity <= 0) {
+      errors.push('Bad quantity')
+    }
+  })
+
+  if (errors.length) {
+    res.status(400).json({ title: 'Bad Request' })
+    return
+  }
+
+  await client.cartsCollection.updateOne(
+    { slug },
+    { $set: { items: requestedItems } },
+  )
+
+  res.status(200).json({})
 }
 
 const GetCart = async (req: NextApiRequest, res: NextApiResponse) => {
@@ -44,30 +80,26 @@ const AddToCart = async (req: NextApiRequest, res: NextApiResponse) => {
     return
   }
 
-  const items: Array<CartItemRequest> = []
-  const itemSlugs = body.data.items.map((i) => i.slug)
-
-  const existingItems = await client.productsCollection.countDocuments({
-    slug: { $in: itemSlugs },
-  })
-  if (existingItems !== body.data.items.length) {
-    console.log("couldnt find items", body.data)
-    res.status(404).json({ title: 'Not Found' })
-    return
-  }
-
-  requestedItems.forEach((item) => {
-    items.push({
-      slug: item.slug,
-      quantity: item.quantity || 1,
-    })
-  })
+  // Checking that the item exists isn't within the scope of this project
 
   const existingCart = await client.cartsCollection.findOne({
     slug: req.query?.slug,
   })
+
   if (existingCart) {
-    const mergedItems = [...existingCart.items, ...items]
+    requestedItems.forEach((item: CartItemRequest, index: number) => {
+      const foundIndex = existingCart.items.findIndex(
+        (ci: CartItem) => ci.slug === item.slug,
+      )
+      if (foundIndex > -1) {
+        // Update the quantity in the cart
+        existingCart.items[foundIndex].quantity += item.quantity
+        // Delete since we'll be merging later
+        requestedItems.splice(index, 1)
+      }
+    })
+
+    const mergedItems = [...existingCart.items, ...requestedItems]
     await client.cartsCollection.updateOne(
       { slug: req.query.slug },
       { $set: { items: mergedItems } },
@@ -85,7 +117,7 @@ const AddToCart = async (req: NextApiRequest, res: NextApiResponse) => {
   const document = {
     _id: new ObjectId(),
     slug: req.query?.slug,
-    items,
+    items: requestedItems,
   }
 
   await client.cartsCollection.insertOne(document)

@@ -2,11 +2,12 @@ import { createContext, useContext, useEffect, useState } from 'react'
 import { CartItem, Product } from '@/lib/models'
 
 interface CartContextType {
-  cartItems: CartItem[];
-  addToCart: (product: Product) => void;
+  cartItems: CartItem[]
+  addToCart: (product: Product) => void
+  updateQuantity: (slug: string, quantity: number) => void
 }
 
-const CartContext = createContext<CartContextType>({ cartItems: [], addToCart: () => {}})
+const CartContext = createContext<CartContextType>({} as never)
 
 export const useCart = () => useContext(CartContext);
 
@@ -49,6 +50,8 @@ export const CartProvider = ({ children }) => {
           items: [{
             slug: product.slug,
             quantity: 1,
+            price: product.price,
+            name: product.name,
           }],
         },
       })
@@ -58,11 +61,43 @@ export const CartProvider = ({ children }) => {
       return
     }
 
-    setCartItems((prev) => [...prev, { slug: product.slug, quantity: 1}])
+    const json = await response.json()
+    setCartItems(json.items)
+  }
+
+  const updateQuantity = async (slug: string, quantity: number) => {
+    const getResponse = await fetch(`/api/carts/cart-id`)
+    const cart = await getResponse.json()
+
+    const itemIndex = cart.items.findIndex((i: CartItem) => i.slug === slug)
+    if (quantity === 0) {
+      cart.items.splice(itemIndex, 1)
+    } else {
+      cart.items[itemIndex].quantity = quantity
+    }
+
+    const response = await fetch(`/api/carts/cart-id`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        data: {
+          slug,
+          items: cart.items,
+        }
+      })
+    })
+
+    if (response.status !== 200) {
+      return
+    }
+
+    setCartItems(cart.items)
   }
 
   return (
-    <CartContext.Provider value={{ cartItems, addToCart }}>
+    <CartContext.Provider value={{ cartItems, addToCart, updateQuantity }}>
       {children}
     </CartContext.Provider>
   )

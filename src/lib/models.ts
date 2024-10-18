@@ -8,8 +8,10 @@ export interface Product {
 }
 
 export interface CartItem {
+  name: string
   quantity: number
   slug: string
+  price: number
 }
 
 export interface Cart {

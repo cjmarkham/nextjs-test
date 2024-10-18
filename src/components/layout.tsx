@@ -1,5 +1,6 @@
 import Navbar from './navbar'
 import Header from './header'
+import CartList from '@/components/cart-list'
 
 export default function Layout({ children }) {
   return (
@@ -9,7 +10,13 @@ export default function Layout({ children }) {
       <Header />
 
       <main>
-        <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">{children}</div>
+        <div className="py-6 sm:px-6 lg:px-8">
+          <div className="flex flex-row">
+            {children}
+
+            <CartList />
+          </div>
+        </div>
       </main>
     </div>
   )
